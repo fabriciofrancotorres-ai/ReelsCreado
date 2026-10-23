@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReelStudio — Frases para Facebook</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#f5f7fb;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:22px 5%;border-bottom:1px solid #26324c;background:#10172a}.brand{font-size:22px;font-weight:900}.brand b{color:#baf3d4}.sub{color:#9eabc4;font-size:13px;margin-top:4px}
+main{max-width:1180px;margin:auto;padding:24px;display:grid;grid-template-columns:380px 1fr;gap:22px}.panel{background:#121a2d;border:1px solid #2b3855;border-radius:18px;padding:18px}h2{font-size:17px;margin:0 0 15px}
+label{display:block;font-size:12px;font-weight:700;color:#cbd5e9;margin:13px 0 6px}input,textarea,select{width:100%;border:1px solid #35425f;background:#080e1c;color:#fff;border-radius:10px;padding:11px;font:inherit}textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.row:has(#duration){grid-template-columns:1fr 1fr}
+button{border:0;border-radius:10px;padding:11px 13px;background:#baf3d4;color:#102019;font-weight:800;cursor:pointer}button.alt{background:#27334e;color:#fff;border:1px solid #3b4967}.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}.status{font-size:12px;color:#baf3d4;margin-top:10px;min-height:18px}.hint{font-size:11px;color:#9eabc4;margin-top:8px;line-height:1.5}
+.preview{min-height:620px;background:#080d18;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:16px}canvas{height:min(76vh,760px);max-width:100%;width:auto;border-radius:10px;box-shadow:0 20px 50px #0009}
+.badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.badge{font-size:11px;border:1px solid #374562;border-radius:99px;padding:5px 8px;color:#cbd5e9}
+@media(max-width:800px){main{grid-template-columns:1fr;padding:12px}.preview{min-height:450px}canvas{height:68vh}}
+</style>
+</head>
+<body>
+<header><div class="brand">✦ Reel<b>Studio</b></div><div class="sub">Creador de imágenes y Reels verticales de frases para Facebook</div></header>
+<main>
+<section class="panel">
+<h2>Crear publicación</h2>
+<label>Tema</label>
+<select id="cat">
+<option value="reflexion">Reflexión</option><option value="amor">Amor</option><option value="desamor">Desamor</option><option value="superacion">Superación</option><option value="esperanza">Esperanza</option><option value="familia">Familia</option><option value="exito">Disciplina y éxito</option>
+</select>
+<label>Frase</label>
+<textarea id="phrase">Aunque avances lento, sigues avanzando. Y eso también cuenta.</textarea>
+<div class="row">
+<div><label>Duración</label><select id="duration"><option value="15">15 segundos</option><option value="20" selected>20 segundos</option><option value="30">30 segundos</option></select></div>
+<div><label>Estilo</label><select id="style"><option value="cinema">Cinematográfico</option><option value="soft">Suave</option><option value="dark">Dramático</option><option value="sun">Luminoso</option></select></div>
+<div><label>Texto</label><select id="font"><option value="elegant">Elegante</option><option value="modern">Moderno</option><option value="strong">Impactante</option></select></div>
+</div>
+<label>Fondo</label>
+<div class="buttons" style="margin-top:0">
+  <button type="button" class="alt" id="gallery">🖼️📹 Escoger foto o video de mi galería</button>
+  <button type="button" class="alt" id="clearBg">↺ Fondo automático</button>
+</div>
+<input id="bgFile" type="file" accept="image/*,video/*" hidden>
+<label>Nombre de página (opcional)</label><input id="signature" placeholder="Ej. Reflexiones que inspiran">
+<div class="buttons"><button id="make">✨ Crear diseño</button><button class="alt" id="idea">🎲 Nueva frase</button></div>
+<div class="buttons"><button id="png">⬇ Descargar PNG</button><button class="alt" id="video">▶ Crear Reel sin música</button></div>
+<div class="status" id="status"></div>
+<div class="hint">PNG: 1080 × 1920. Puedes escribir o generar la frase y escoger una foto de tu galería; la herramienta la adapta automáticamente al formato vertical. Reel sin música ni sonido, con zoom cinematográfico y aparición gradual. Para Facebook puedes sustituir el audio por música disponible/licenciada en la propia plataforma.</div>
+</section>
+<section class="panel">
+<h2>Vista previa</h2>
+<div class="preview"><canvas id="c" width="1080" height="1920"></canvas></div>
+<div class="badges"><span class="badge">9:16 vertical</span><span class="badge">1080×1920</span><span class="badge">Zoom suave</span><span class="badge">Fade-in</span></div>
+</section>
+</main>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d'),$=id=>document.getElementById(id);
+let customBg=null, customBgName='', customBgVideo=null, customBgUrl=null, customBgType=null;
+const ideas={
+reflexion:["No todo lo que termina es una pérdida. Algunas despedidas también son comienzos.","A veces necesitas detenerte para descubrir hacia dónde quieres seguir.","Lo que hoy parece un retraso quizá mañana entiendas que fue protección."],
+amor:["El amor bonito se siente como paz, no como una batalla constante.","Quien te quiere de verdad también cuida la forma en que te hace sentir.","El amor vive en los pequeños detalles que nadie más ve."],
+desamor:["A veces extrañas una etapa, no a la persona que estaba en ella.","Sanar también es dejar de esperar una explicación que nunca llegará.","Hay despedidas que duelen, pero quedarse donde no te valoran duele más."],
+superacion:["Aunque avances lento, sigues avanzando. Y eso también cuenta.","No tienes que tener todo resuelto. Solo necesitas dar el siguiente paso.","Un día mirarás atrás y agradecerás no haberte rendido."],
+esperanza:["Todavía pueden suceder cosas bonitas que hoy ni siquiera imaginas.","Después de una noche larga, el cielo también vuelve a iluminarse.","Empezar de nuevo no borra tu historia: demuestra cuánto aprendiste."],
+familia:["La verdadera riqueza es tener personas con quienes el corazón pueda descansar.","Agradece a quienes permanecen contigo incluso en tus días difíciles.","El tiempo que compartes con quienes amas vale más de lo que imaginas."],
+exito:["La constancia te llevará a lugares donde la motivación no siempre puede.","No necesitas hacerlo perfecto. Necesitas empezar y continuar.","Trabaja en silencio y deja que tus resultados hablen."]
+};
+function rand(n){let q=Math.sin(n*91.73)*43758.5453;return q-Math.floor(q)}
+function drawCustomBackground(t){
+ if(!customBg) return false;
+ const iw=customBg.naturalWidth, ih=customBg.naturalHeight;
+ const scale=Math.max(1080/iw,1920/ih);
+ const bw=iw*scale, bh=ih*scale;
+ const zoom=1+0.025*Math.sin(t*.45);
+ const dw=bw*zoom, dh=bh*zoom;
+ const pan=(Math.sin(t*.22)*.5+.5);
+ const px=Math.max(0,dw-1080)*pan*.35;
+ const py=Math.max(0,dh-1920)*.12;
+ x.drawImage(customBg,(1080-dw)/2-px,(1920-dh)/2-py,dw,dh);
+ let ov=x.createLinearGradient(0,0,0,1920);
+ ov.addColorStop(0,'#02071355');ov.addColorStop(.45,'#02071320');
+ ov.addColorStop(.72,'#02071388');ov.addColorStop(1,'#020713bb');
+ x.fillStyle=ov;x.fillRect(0,0,1080,1920);
+ return true;
+}
+function drawVideoBackground(t){
+ if(!customBgVideo || !customBgVideo.videoWidth) return false;
+ const iw=customBgVideo.videoWidth, ih=customBgVideo.videoHeight;
+ const scale=Math.max(1080/iw,1920/ih)*(1.02+0.02*Math.sin(t*.45));
+ const dw=iw*scale, dh=ih*scale;
+ const px=Math.sin(t*.22)*Math.max(0,dw-1080)*.08;
+ const py=Math.cos(t*.18)*Math.max(0,dh-1920)*.04;
+ x.drawImage(customBgVideo,(1080-dw)/2-px,(1920-dh)/2-py,dw,dh);
+ let ov=x.createLinearGradient(0,0,0,1920); ov.addColorStop(0,'#02071355');ov.addColorStop(.45,'#02071320');ov.addColorStop(.72,'#02071388');ov.addColorStop(1,'#020713bb');x.fillStyle=ov;x.fillRect(0,0,1080,1920); return true;
+}
+function scene(t){
+ let cat=$('cat').value,sty=$('style').value;
+ let p={cinema:['#07182e','#28506b','#bf7159','#f4c77e'],soft:['#1a2850','#6e6299','#d79dbb','#f6d8c7'],dark:['#050812','#162238','#44556b','#a26c68'],sun:['#17304a','#47819a','#e9a45d','#ffe5a4']}[sty];
+ if(cat==='amor')p=sty==='dark'?['#160c20','#4c203f','#a95872','#f0b0a0']:['#172647','#72506f','#d88d98','#ffd7bb'];
+ if(cat==='desamor')p=['#080f1e','#27394b','#6b8091','#c4a7a5'];
+ if(cat==='superacion'||cat==='exito')p=['#061b2b','#17576a','#e28d5d','#ffdc98'];
+ if(cat==='esperanza')p=['#102a46','#4c8191','#e9a66d','#fff1b4'];
+ if(cat==='familia')p=['#2a203a','#79525b','#d79b70','#ffe0a3'];
+ let g=x.createLinearGradient(0,0,0,1920);p.forEach((z,i)=>g.addColorStop(i/3,z));x.fillStyle=g;x.fillRect(0,0,1080,1920);
+ let gl=x.createRadialGradient(540,760,10,540,760,800);gl.addColorStop(0,'#fff3d844');gl.addColorStop(1,'#0000');x.fillStyle=gl;x.fillRect(0,0,1080,1920);
+ for(let i=0;i<100;i++){x.globalAlpha=.08+rand(i+20)*.28;x.fillStyle='#fff';x.beginPath();x.arc(rand(i+2)*1080,rand(i+80)*1150,1+rand(i+100)*2.5,0,7);x.fill()}x.globalAlpha=1;
+ let sy=650+Math.sin(t*.7)*9;let s=x.createRadialGradient(540,sy,15,540,sy,250);s.addColorStop(0,'#fff0c9bb');s.addColorStop(1,'#ffd2a300');x.fillStyle=s;x.fillRect(260,sy-250,560,500);x.fillStyle='#ffe5b8aa';x.beginPath();x.arc(540,sy,86,0,7);x.fill();
+ x.fillStyle='#111d31aa';x.fillRect(0,900,1080,1020);
+ function m(base,amp,col,seed){x.beginPath();x.moveTo(0,1920);x.lineTo(0,base);for(let xx=0;xx<=1080;xx+=18)x.lineTo(xx,base-Math.abs(Math.sin(xx*.004+seed))*amp-Math.abs(Math.sin(xx*.013+seed))*amp*.25);x.lineTo(1080,1920);x.fillStyle=col;x.fill()}
+ m(1240,230,'#17273d',1);m(1400,300,'#0c192b',3);
+ let vg=x.createRadialGradient(540,950,300,540,950,1150);vg.addColorStop(0,'#0000');vg.addColorStop(1,'#020612c9');x.fillStyle=vg;x.fillRect(0,0,1080,1920);
+ if(cat==='amor'||cat==='desamor'){x.save();x.translate(540,480);x.scale(1.4,1.4);x.globalAlpha=.12;x.fillStyle='#fff';x.beginPath();x.moveTo(0,60);x.bezierCurveTo(-150,-35,-105,-120,-38,-88);x.bezierCurveTo(-10,-74,0,-45,0,-45);x.bezierCurveTo(0,-45,30,-100,80,-94);x.bezierCurveTo(160,-82,125,10,0,60);x.fill();x.restore();x.globalAlpha=1}
+}
+function wrap(txt,max){let a=txt.trim().split(/\s+/),out=[],line='';for(let w of a){let z=line?line+' '+w:w;if(x.measureText(z).width>max&&line){out.push(line);line=w}else line=z}if(line)out.push(line);return out}
+function draw(t=0,fade=1){
+ if(!(customBgType==='video' ? drawVideoBackground(t) : drawCustomBackground(t))) scene(t);let phrase=$('phrase').value.trim()||'Escribe tu frase aquí.';
+ let f=$('font').value,face=f==='elegant'?'Georgia,serif':'system-ui,sans-serif',weight=f==='strong'?'900':'700',size=phrase.length>105?48:61;
+ x.fillStyle='#071020a8';x.fillRect(70,600,940,830);
+ x.textAlign='center';x.fillStyle='#f4d39c';x.font='700 24px system-ui';x.fillText('UNA REFLEXIÓN PARA HOY',540,700);
+ x.font=weight+' '+size+'px '+face;let lines=wrap(phrase,850);if(lines.length>7){size=43;x.font=weight+' '+size+'px '+face;lines=wrap(phrase,850)}
+ let lh=size*1.3,y=1010-lines.length*lh/2;x.shadowColor='#000';x.shadowBlur=24;x.fillStyle='#fffaf2';x.globalAlpha=fade;
+ lines.forEach((v,i)=>x.fillText(v,540,y+i*lh));x.shadowBlur=0;x.globalAlpha=1;x.fillStyle='#e9c98d';x.fillRect(440,1280,200,3);
+ let sig=$('signature').value.trim();if(sig){x.font='600 27px system-ui';x.fillStyle='#fff';x.globalAlpha=.82*fade;x.fillText(sig,540,1350)}x.globalAlpha=1;x.strokeStyle='#ffffff30';x.lineWidth=2;x.strokeRect(28,28,1024,1864)
+}
+function redraw(){draw();$('status').textContent='Diseño actualizado.'}
+$('make').onclick=redraw;
+$('idea').onclick=()=>{let a=ideas[$('cat').value];$('phrase').value=a[Math.floor(Math.random()*a.length)];redraw()};
+['cat','style','font','phrase','signature'].forEach(id=>$(id).addEventListener('input',redraw));
+$('png').onclick=()=>{draw();c.toBlob(b=>{let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='reel-frase-facebook.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);$('status').textContent='PNG listo: 1080 × 1920.'},'image/png')};
+$('video').onclick=async()=>{
+ if(!window.MediaRecorder||!c.captureStream){$('status').textContent='Tu navegador no permite crear video. Usa Chrome actualizado.';return}
+ $('video').disabled=true;
+ const duration=Number($('duration').value);
+ $('status').textContent='Creando Reel silencioso de '+duration+' segundos…';
+ let stream=c.captureStream(30);
+ try{
+  let mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+  let r=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000}),chunks=[];
+  r.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  r.onstop=()=>{
+   let b=new Blob(chunks,{type:mime}),a=document.createElement('a');
+   a.href=URL.createObjectURL(b);a.download='reel-frase-facebook-sin-musica-'+duration+'s.webm';a.click();
+   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+   stream.getTracks().forEach(t=>t.stop());
+   $('video').disabled=false;
+   $('status').textContent='Reel silencioso creado: '+duration+' segundos.';
+  };
+  let st=performance.now();r.start();
+  function loop(now){
+   let q=(now-st)/1000;
+   let intro=Math.min(1,q/1.4);
+   let outro=Math.min(1,(duration-q)/1.2);
+   draw(q*.65,Math.max(0,intro*outro));
+   if(q<duration)requestAnimationFrame(loop);else r.stop();
+  }
+  requestAnimationFrame(loop);
+ }catch(e){
+  stream.getTracks().forEach(t=>t.stop());
+  $('video').disabled=false;
+  $('status').textContent='No se pudo crear el Reel en este navegador.';
+ }
+};
+$('gallery').onclick=()=> $('bgFile').click();
+$('bgFile').addEventListener('change',e=>{
+ const file=e.target.files&&e.target.files[0];
+ if(!file)return;
+ if(customBgUrl) URL.revokeObjectURL(customBgUrl);
+ customBgUrl=URL.createObjectURL(file);
+ customBgName=file.name;
+ if(file.type.startsWith('video/')){
+   customBg=null; customBgType='video';
+   const v=document.createElement('video');
+   v.src=customBgUrl; v.muted=true; v.loop=true; v.playsInline=true; v.preload='auto';
+   v.onloadeddata=()=>{customBgVideo=v; v.play().catch(()=>{}); redraw(); $('status').textContent='Video seleccionado: '+file.name;};
+   v.onerror=()=>{$('status').textContent='No se pudo abrir ese video.';};
+ } else if(file.type.startsWith('image/')){
+   customBgType='image'; customBgVideo=null;
+   const reader=new FileReader();
+   reader.onload=ev=>{const img=new Image(); img.onload=()=>{customBg=img; redraw(); $('status').textContent='Fondo seleccionado: '+file.name;}; img.onerror=()=>{$('status').textContent='No se pudo abrir esa imagen.';}; img.src=ev.target.result;};
+   reader.readAsDataURL(file);
+ } else {$('status').textContent='Selecciona una foto o video compatible.';}
+});
+$('clearBg').onclick=()=>{
+ customBg=null;customBgName='';customBgType=null;if(customBgUrl){URL.revokeObjectURL(customBgUrl);customBgUrl=null;}if(customBgVideo){customBgVideo.pause();customBgVideo.removeAttribute('src');customBgVideo.load();customBgVideo=null;}$('bgFile').value='';redraw();
+ $('status').textContent='Fondo automático activado.';
+};
+
+redraw();
+</script>
+</body></html>

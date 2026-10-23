@@ -1,0 +1,24 @@
+REELSTUDIO ANDROID
+==================
+
+Este proyecto contiene la herramienta ReelStudio actual dentro de un WebView Android.
+
+Incluye el HTML actual con:
+- Frases escritas o generadas
+- Fotos de galería
+- Videos de galería
+- Sin música
+- PNG
+- Reel silencioso
+- 15/20/30 segundos
+
+Para generar la APK:
+1. Abrir esta carpeta en Android Studio.
+2. Esperar a que Gradle sincronice.
+3. Ir a Build > Build APK(s).
+4. Instalar la APK generada en el teléfono.
+
+Nota:
+Esta primera versión es una envoltura Android de la herramienta HTML actual.
+La siguiente etapa puede añadir permisos Android, selector nativo de galería,
+guardado directo en Fotos/Galería y una interfaz más nativa.
